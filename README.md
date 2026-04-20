@@ -82,16 +82,20 @@ Certbot only renews if the certificate expires within 30 days.
 0 3 1 * * cd /path/to/certbot-dns-scannet && docker compose run --rm certbot >> /var/log/certbot-scannet.log 2>&1
 ```
 
-## Publishing to GHCR
+## Download from GHCR.IO
 
-Pushes to `main` and version tags like `v1.0.0` trigger the GitHub Actions workflow in [.github/workflows/publish.yml](.github/workflows/publish.yml). The workflow builds the Docker image and publishes these tags to GHCR:
+Pre-built images are published to GitHub Container Registry at [`ghcr.io/enoch85/certbot-dns-scannet`](https://github.com/enoch85/certbot-dns-scannet/pkgs/container/certbot-dns-scannet). Pull the tag you want:
 
-- `latest` on `main`
-- `main` for the branch build
-- `sha-...` for immutable commit builds
-- `vX.Y.Z` for release tags
+- `latest` — tip of `main`
+- `vX.Y.Z` — pinned release (recommended for production)
+- `sha-<commit>` — immutable commit build
+- `main` — branch build
 
-The first package push may appear as private in GitHub Packages depending on repository settings. If that happens, change the package visibility to public in the repository's package settings.
+```bash
+docker pull ghcr.io/enoch85/certbot-dns-scannet:v1.0.0
+```
+
+Set `CERTBOT_IMAGE` in your `.env` to the tag you want Compose to use.
 
 ## Local image builds
 
