@@ -1,0 +1,7 @@
+services:
+  certbot:
+    build: .
+    volumes:
+      - ./.env:/config/.env:ro
+      - ./certs:/certs
+      - ./letsencrypt:/etc/letsencrypt
