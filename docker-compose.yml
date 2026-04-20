@@ -1,6 +1,6 @@
 services:
   certbot:
-    build: .
+    image: ${CERTBOT_IMAGE:-ghcr.io/enoch85/certbot-dns-scannet:latest}
     volumes:
       - ./.env:/config/.env:ro
       - ./certs:/certs

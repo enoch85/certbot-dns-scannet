@@ -4,6 +4,8 @@ Let's Encrypt certificates via DNS-01 challenge for domains hosted on [ScanNet](
 
 ScanNet isn't supported by certbot or [lego](https://go-acme.github.io/lego/dns/) out of the box. This project fills that gap with a lightweight Docker container that handles issuance, renewal, and cleanup automatically via ScanNet's REST API.
 
+The repository is set up to publish a ready-to-run image to GHCR at `ghcr.io/enoch85/certbot-dns-scannet`, so Docker Compose can pull it directly without a local build.
+
 ## Features
 
 - Fully automated DNS-01 challenge — no HTTP server or inbound access needed
@@ -45,7 +47,19 @@ SCANNET_CLIENT_ID=your-client-id
 SCANNET_CLIENT_SECRET=your-client-secret
 ```
 
-### 3. Get your certificate
+### 3. Pull the published image
+
+```bash
+docker compose pull
+```
+
+If you want to pin a specific version, set `CERTBOT_IMAGE` in `.env`, for example:
+
+```env
+CERTBOT_IMAGE=ghcr.io/enoch85/certbot-dns-scannet:v1.0.0
+```
+
+### 4. Get your certificate
 
 ```bash
 docker compose run --rm certbot
@@ -59,13 +73,33 @@ certs/
 └── key.pem       # Private key
 ```
 
-### 4. Set up auto-renewal
+### 5. Set up auto-renewal
 
 Certbot only renews if the certificate expires within 30 days.
 
 ```bash
 # crontab -e
 0 3 1 * * cd /path/to/certbot-dns-scannet && docker compose run --rm certbot >> /var/log/certbot-scannet.log 2>&1
+```
+
+## Publishing to GHCR
+
+Pushes to `main` and version tags like `v1.0.0` trigger the GitHub Actions workflow in [.github/workflows/publish.yml](.github/workflows/publish.yml). The workflow builds the Docker image and publishes these tags to GHCR:
+
+- `latest` on `main`
+- `main` for the branch build
+- `sha-...` for immutable commit builds
+- `vX.Y.Z` for release tags
+
+The first package push may appear as private in GitHub Packages depending on repository settings. If that happens, change the package visibility to public in the repository's package settings.
+
+## Local image builds
+
+If you want to build the image locally instead of pulling from GHCR:
+
+```bash
+docker build -t certbot-dns-scannet:local .
+CERTBOT_IMAGE=certbot-dns-scannet:local docker compose run --rm certbot
 ```
 
 ## Usage with a reverse proxy
