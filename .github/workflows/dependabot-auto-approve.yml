@@ -15,22 +15,30 @@ jobs:
   approve:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.actor.login == 'dependabot[bot]'
+      github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve pull request number
+      - name: Resolve Dependabot pull request
         id: pr
         uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const pullRequest = context.payload.workflow_run.pull_requests[0]
-            if (!pullRequest) {
+            const ref = context.payload.workflow_run.pull_requests[0]
+            if (!ref) {
               core.info('No pull request attached to this workflow run.')
               return
             }
-            core.setOutput('number', pullRequest.number)
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ref.number,
+            })
+            if (pr.user.login !== 'dependabot[bot]') {
+              core.info(`PR #${ref.number} authored by ${pr.user.login}, not dependabot[bot]. Skipping.`)
+              return
+            }
+            core.setOutput('number', ref.number)
 
       - name: Approve Dependabot pull request
         if: steps.pr.outputs.number
