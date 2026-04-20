@@ -3,6 +3,7 @@
 # https://github.com/enoch85/certbot-dns-scannet
 set -eu
 
+# shellcheck source=/dev/null
 . /config/.env
 
 # --- ScanNet API config ---
