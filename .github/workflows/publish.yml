@@ -6,6 +6,10 @@ on:
       - main
     tags:
       - 'v*'
+  # Dependabot sees only the alpine tag, not the packages apk installs, so a weekly
+  # rebuild picks up their fixes. For the same reason the build keeps no layer cache.
+  schedule:
+    - cron: '17 5 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -55,7 +59,8 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=tag
-            type=sha
+            type=sha,enable=${{ github.event_name != 'schedule' }}
+            type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push image
@@ -65,5 +70,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
