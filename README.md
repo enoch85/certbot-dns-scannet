@@ -90,6 +90,7 @@ Pre-built images are published to GitHub Container Registry at [`ghcr.io/enoch85
 - `vX.Y.Z` — pinned release (recommended for production)
 - `sha-<commit>` — immutable commit build
 - `main` — branch build
+- `YYYYMMDD` - weekly rebuild of `main` with current Alpine packages; `latest` and `main` move with it
 
 ```bash
 docker pull ghcr.io/enoch85/certbot-dns-scannet:v1.0.0
