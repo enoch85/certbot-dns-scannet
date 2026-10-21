@@ -1,0 +1,46 @@
+name: Dependabot auto-merge
+
+# Approves a Dependabot pull request and enables auto-merge; GitHub merges it once the
+# ruleset on main is met. Both use a GitHub App token, because a merge made with
+# GITHUB_TOKEN starts no workflow run, so Publish would never build it. Major updates
+# are left for review. Nothing from the pull request is checked out or run.
+
+on: pull_request_target
+
+permissions: {}
+
+jobs:
+  merge:
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.repository == 'enoch85/certbot-dns-scannet'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.MERGE_APP_ID }}
+          private-key: ${{ secrets.MERGE_APP_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Approve and enable auto-merge
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+          decision=$(gh pr view "$PR_URL" --json reviewDecision --jq .reviewDecision)
+          if [ "$decision" != APPROVED ]; then
+            gh pr review --approve --body 'Automatically approved: Dependabot update, not a major version.' "$PR_URL"
+          fi
+          gh pr merge --auto --squash --delete-branch "$PR_URL"
